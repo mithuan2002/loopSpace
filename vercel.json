@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "installCommand": "pnpm install",
+  "installCommand": "corepack enable && pnpm install",
   "buildCommand": "pnpm run typecheck:libs && pnpm --filter @workspace/api-server run build && BASE_PATH=/ pnpm --filter @workspace/loopspace run build",
   "outputDirectory": "artifacts/loopspace/dist/public",
   "rewrites": [
