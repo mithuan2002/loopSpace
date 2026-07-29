@@ -51,7 +51,11 @@ export default defineConfig({
   },
   root: path.resolve(__dirname),
   build: {
-    outDir: path.resolve(__dirname, 'dist/public'),
+    // On Vercel, write directly to the monorepo-root ./public so no `cp` is needed.
+    // Locally (Replit dev), write to artifacts/loopspace/dist/public.
+    outDir: process.env.VERCEL
+      ? path.resolve(__dirname, '../../public')
+      : path.resolve(__dirname, 'dist/public'),
     emptyOutDir: true,
   },
   server: {
