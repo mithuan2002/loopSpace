@@ -1,8 +1,8 @@
 {
   "framework": null,
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/api-server run build && BASE_PATH=/ pnpm --filter @workspace/loopspace run build",
-  "outputDirectory": "artifacts/loopspace/dist/public",
+  "buildCommand": "pnpm --filter @workspace/api-server run build && BASE_PATH=/ pnpm --filter @workspace/loopspace run build && cp -r artifacts/loopspace/dist/public ./public",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
