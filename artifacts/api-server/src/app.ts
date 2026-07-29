@@ -13,25 +13,26 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req: { id: unknown; method: string; url?: string }) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
-      },
-      res(res: { statusCode: number }) {
-        return {
-          statusCode: res.statusCode,
-        };
-      },
+// pino-http uses `export =` (CommonJS) which TypeScript treats as a non-callable
+// namespace under `moduleResolution: "bundler"` even with esModuleInterop — cast to any.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+app.use((pinoHttp as any)({
+  logger,
+  serializers: {
+    req(req: { id: unknown; method: string; url?: string }) {
+      return {
+        id: req.id,
+        method: req.method,
+        url: req.url?.split("?")[0],
+      };
     },
-  }),
-);
+    res(res: { statusCode: number }) {
+      return {
+        statusCode: res.statusCode,
+      };
+    },
+  },
+}));
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
