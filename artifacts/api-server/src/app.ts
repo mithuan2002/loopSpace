@@ -1,6 +1,5 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
@@ -13,26 +12,32 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
-// pino-http uses `export =` (CommonJS) which TypeScript treats as a non-callable
-// namespace under `moduleResolution: "bundler"` even with esModuleInterop — cast to any.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-app.use((pinoHttp as any)({
-  logger,
-  serializers: {
-    req(req: { id: unknown; method: string; url?: string }) {
-      return {
-        id: req.id,
-        method: req.method,
-        url: req.url?.split("?")[0],
-      };
+// pino-http uses `export =` (CommonJS). Under moduleResolution:"bundler" the default
+// import resolves to the namespace object, not the callable. Use require() so the
+// runtime value is unambiguously the function, then cast it to RequestHandler.
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const pinoHttpFactory = require("pino-http") as (
+  opts: Record<string, unknown>,
+) => express.RequestHandler;
+app.use(
+  pinoHttpFactory({
+    logger,
+    serializers: {
+      req(req: { id: unknown; method: string; url?: string }) {
+        return {
+          id: req.id,
+          method: req.method,
+          url: req.url?.split("?")[0],
+        };
+      },
+      res(res: { statusCode: number }) {
+        return {
+          statusCode: res.statusCode,
+        };
+      },
     },
-    res(res: { statusCode: number }) {
-      return {
-        statusCode: res.statusCode,
-      };
-    },
-  },
-}));
+  }),
+);
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
