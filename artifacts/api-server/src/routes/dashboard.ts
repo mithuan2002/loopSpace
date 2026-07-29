@@ -56,7 +56,7 @@ router.get("/projects/:projectId/dashboard", requireAuth, async (req: any, res):
     .where(eq(pagesTable.projectId, projectId));
 
   const byPage = await Promise.all(
-    pages.map(async (page) => {
+    pages.map(async (page: (typeof pages)[number]) => {
       const [total] = await db.select({ count: count() }).from(feedbackTable).where(eq(feedbackTable.pageId, page.id));
       const [open] = await db.select({ count: count() }).from(feedbackTable).where(and(eq(feedbackTable.pageId, page.id), eq(feedbackTable.status, "open")));
       const [inProg] = await db.select({ count: count() }).from(feedbackTable).where(and(eq(feedbackTable.pageId, page.id), eq(feedbackTable.status, "in_progress")));
@@ -103,7 +103,7 @@ router.get("/dashboard/summary", requireAuth, async (req: any, res): Promise<voi
     .from(projectsTable)
     .where(eq(projectsTable.userId, userId));
 
-  const projectIds = projects.map((p) => p.id);
+  const projectIds = projects.map((p: (typeof projects)[number]) => p.id);
 
   if (projectIds.length === 0) {
     res.json({
@@ -148,7 +148,7 @@ router.get("/dashboard/summary", requireAuth, async (req: any, res): Promise<voi
 
   // Enrich top projects with counts
   const enriched = await Promise.all(
-    projects.slice(0, 5).map(async (project) => {
+    projects.slice(0, 5).map(async (project: (typeof projects)[number]) => {
       const [pageRow] = await db.select({ count: count() }).from(pagesTable).where(eq(pagesTable.projectId, project.id));
       const [feedRow] = await db.select({ count: count() }).from(feedbackTable).where(eq(feedbackTable.projectId, project.id));
       const [openR] = await db.select({ count: count() }).from(feedbackTable).where(and(eq(feedbackTable.projectId, project.id), eq(feedbackTable.status, "open")));
