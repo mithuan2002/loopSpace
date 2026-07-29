@@ -14,7 +14,8 @@ async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  const sharedConfig = {
+  await esbuild({
+    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
     bundle: true,
     format: "esm",
@@ -116,19 +117,6 @@ globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
 globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
-  };
-
-  // Build the server entry point (for Replit — starts the HTTP server)
-  await esbuild({
-    ...sharedConfig,
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
-  });
-
-  // Build the app-only entry point (for Vercel — exports the Express app
-  // as a serverless function handler without calling app.listen())
-  await esbuild({
-    ...sharedConfig,
-    entryPoints: [path.resolve(artifactDir, "src/app.ts")],
   });
 }
 
