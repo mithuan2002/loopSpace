@@ -444,3 +444,32 @@ export const GetGlobalDashboardResponse = zod.object({
 })
 
 
+/**
+ * @summary Get AI-powered analysis of feedback for a project
+ */
+export const GetProjectAnalysisParams = zod.object({
+  "projectId": zod.coerce.number()
+})
+
+export const GetProjectAnalysisResponse = zod.object({
+  "projectId": zod.number(),
+  "projectName": zod.string(),
+  "feedbackCount": zod.number(),
+  "executiveSummary": zod.string(),
+  "overallSentiment": zod.string(),
+  "topIssues": zod.array(zod.object({
+  "title": zod.string(),
+  "description": zod.string(),
+  "priority": zod.enum(['critical', 'high', 'medium', 'low']),
+  "mentionCount": zod.number()
+})),
+  "whatUsersLove": zod.array(zod.string()),
+  "suggestions": zod.array(zod.object({
+  "title": zod.string(),
+  "description": zod.string(),
+  "impact": zod.enum(['high', 'medium', 'low'])
+})),
+  "generatedAt": zod.string()
+})
+
+

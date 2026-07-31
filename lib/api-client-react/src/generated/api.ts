@@ -21,6 +21,7 @@ import type {
 
 import type {
   Feedback,
+  FeedbackAnalysis,
   FeedbackInput,
   FeedbackUpdate,
   GlobalDashboard,
@@ -1550,6 +1551,83 @@ export function useGetGlobalDashboard<TData = Awaited<ReturnType<typeof getGloba
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGlobalDashboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetProjectAnalysisUrl = (projectId: number,) => {
+
+
+
+
+  return `/api/projects/${projectId}/analysis`
+}
+
+/**
+ * @summary Get AI-powered analysis of feedback for a project
+ */
+export const getProjectAnalysis = async (projectId: number, options?: Parameters<typeof customFetch>[1]): Promise<FeedbackAnalysis> => {
+
+  return customFetch<FeedbackAnalysis>(getGetProjectAnalysisUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectAnalysisQueryKey = (projectId: number,) => {
+    return [
+    `/api/projects/${projectId}/analysis`
+    ] as const;
+    }
+
+
+export const getGetProjectAnalysisQueryOptions = <TData = Awaited<ReturnType<typeof getProjectAnalysis>>, TError = ErrorType<void>>(projectId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectAnalysis>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectAnalysisQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectAnalysis>>> = ({ signal }) => getProjectAnalysis(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectAnalysis>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectAnalysisQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectAnalysis>>>
+export type GetProjectAnalysisQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get AI-powered analysis of feedback for a project
+ */
+
+export function useGetProjectAnalysis<TData = Awaited<ReturnType<typeof getProjectAnalysis>>, TError = ErrorType<void>>(
+ projectId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectAnalysis>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectAnalysisQueryOptions(projectId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

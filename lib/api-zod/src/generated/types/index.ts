@@ -6,7 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './analysisIssue';
+export * from './analysisIssuePriority';
+export * from './analysisSuggestion';
+export * from './analysisSuggestionImpact';
 export * from './feedback';
+export * from './feedbackAnalysis';
 export * from './feedbackInput';
 export * from './feedbackInputPriority';
 export * from './feedbackPriority';

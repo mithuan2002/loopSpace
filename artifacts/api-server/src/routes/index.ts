@@ -5,6 +5,7 @@ import projectsRouter from "./projects";
 import pagesRouter from "./pages";
 import feedbackRouter from "./feedback";
 import dashboardRouter from "./dashboard";
+import analysisRouter from "./analysis";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(projectsRouter);
 router.use(pagesRouter);
 router.use(feedbackRouter);
 router.use(dashboardRouter);
+router.use(analysisRouter);
 
 export default router;

@@ -190,3 +190,47 @@ export interface GlobalDashboard {
   topProjects: Project[];
 }
 
+export type AnalysisIssuePriority = typeof AnalysisIssuePriority[keyof typeof AnalysisIssuePriority];
+
+
+export const AnalysisIssuePriority = {
+  critical: 'critical',
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface AnalysisIssue {
+  title: string;
+  description: string;
+  priority: AnalysisIssuePriority;
+  mentionCount: number;
+}
+
+export type AnalysisSuggestionImpact = typeof AnalysisSuggestionImpact[keyof typeof AnalysisSuggestionImpact];
+
+
+export const AnalysisSuggestionImpact = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface AnalysisSuggestion {
+  title: string;
+  description: string;
+  impact: AnalysisSuggestionImpact;
+}
+
+export interface FeedbackAnalysis {
+  projectId: number;
+  projectName: string;
+  feedbackCount: number;
+  executiveSummary: string;
+  overallSentiment: string;
+  topIssues: AnalysisIssue[];
+  whatUsersLove: string[];
+  suggestions: AnalysisSuggestion[];
+  generatedAt: string;
+}
+
