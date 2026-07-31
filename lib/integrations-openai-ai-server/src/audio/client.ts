@@ -6,18 +6,23 @@ import { randomUUID } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
 
-// Lazy client — only errors when an audio function is actually called.
+// Groq audio client.
+// Supported:  speech-to-text (whisper-large-v3-turbo)
+// Unsupported: text-to-speech, voice chat (Groq has no TTS/audio-output API)
 let _client: OpenAI | undefined;
 
 function getClient(): OpenAI {
   if (!_client) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       throw new Error(
-        "OPENAI_API_KEY must be set to use audio features. Add it in the Secrets panel.",
+        "GROQ_API_KEY is not set. Add it in the Secrets panel (free key at console.groq.com).",
       );
     }
-    _client = new OpenAI({ apiKey });
+    _client = new OpenAI({
+      apiKey,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
   }
   return _client;
 }
@@ -54,7 +59,7 @@ export function detectAudioFormat(buffer: Buffer): AudioFormat {
   ) {
     return "mp3";
   }
-  // MP4/M4A/MOV: ....ftyp (Safari/iOS records in these containers)
+  // MP4/M4A/MOV: ....ftyp (Safari/iOS)
   if (buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) {
     return "mp4";
   }
@@ -103,7 +108,7 @@ export async function convertToWav(audioBuffer: Buffer): Promise<Buffer> {
 }
 
 /**
- * Auto-detect and convert audio to OpenAI-compatible format.
+ * Auto-detect and convert audio to a Groq-compatible format (wav or mp3).
  */
 export async function ensureCompatibleFormat(
   audioBuffer: Buffer
@@ -115,115 +120,35 @@ export async function ensureCompatibleFormat(
   return { buffer: wavBuffer, format: "wav" };
 }
 
-/** Voice Chat: audio-in, audio-out using gpt-audio. */
-export async function voiceChat(
-  audioBuffer: Buffer,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy",
-  inputFormat: "wav" | "mp3" = "wav",
-  outputFormat: "wav" | "mp3" = "mp3"
-): Promise<{ transcript: string; audioResponse: Buffer }> {
-  const audioBase64 = audioBuffer.toString("base64");
-  const response = await getClient().chat.completions.create({
-    model: "gpt-audio",
-    modalities: ["text", "audio"],
-    audio: { voice, format: outputFormat },
-    messages: [{
-      role: "user",
-      content: [
-        { type: "input_audio", input_audio: { data: audioBase64, format: inputFormat } },
-      ],
-    }],
-  });
-  const message = response.choices[0]?.message as any;
-  const transcript = message?.audio?.transcript || message?.content || "";
-  const audioData = message?.audio?.data ?? "";
-  return {
-    transcript,
-    audioResponse: Buffer.from(audioData, "base64"),
-  };
+// ─── NOT SUPPORTED ON GROQ ────────────────────────────────────────────────────
+
+const GROQ_NO_TTS = new Error(
+  "Text-to-speech and voice chat are not supported by Groq. Use a provider with TTS support if you need this feature.",
+);
+
+/** @deprecated Not supported on Groq — throws at runtime. */
+export async function voiceChat(): Promise<never> {
+  throw GROQ_NO_TTS;
 }
 
-/** Streaming Voice Chat for real-time audio responses. */
-export async function voiceChatStream(
-  audioBuffer: Buffer,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy",
-  inputFormat: "wav" | "mp3" = "wav"
-): Promise<AsyncIterable<{ type: "transcript" | "audio"; data: string }>> {
-  const audioBase64 = audioBuffer.toString("base64");
-  const stream = await getClient().chat.completions.create({
-    model: "gpt-audio",
-    modalities: ["text", "audio"],
-    audio: { voice, format: "pcm16" },
-    messages: [{
-      role: "user",
-      content: [
-        { type: "input_audio", input_audio: { data: audioBase64, format: inputFormat } },
-      ],
-    }],
-    stream: true,
-  });
-
-  return (async function* () {
-    for await (const chunk of stream) {
-      const delta = chunk.choices?.[0]?.delta as any;
-      if (!delta) continue;
-      if (delta?.audio?.transcript) {
-        yield { type: "transcript", data: delta.audio.transcript };
-      }
-      if (delta?.audio?.data) {
-        yield { type: "audio", data: delta.audio.data };
-      }
-    }
-  })();
+/** @deprecated Not supported on Groq — throws at runtime. */
+export async function voiceChatStream(): Promise<never> {
+  throw GROQ_NO_TTS;
 }
 
-/** Text-to-Speech using gpt-audio. */
-export async function textToSpeech(
-  text: string,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy",
-  format: "wav" | "mp3" | "flac" | "opus" | "pcm16" = "wav"
-): Promise<Buffer> {
-  const response = await getClient().chat.completions.create({
-    model: "gpt-audio",
-    modalities: ["text", "audio"],
-    audio: { voice, format },
-    messages: [
-      { role: "system", content: "You are an assistant that performs text-to-speech." },
-      { role: "user", content: `Repeat the following text verbatim: ${text}` },
-    ],
-  });
-  const audioData = (response.choices[0]?.message as any)?.audio?.data ?? "";
-  return Buffer.from(audioData, "base64");
+/** @deprecated Not supported on Groq — throws at runtime. */
+export async function textToSpeech(): Promise<never> {
+  throw GROQ_NO_TTS;
 }
 
-/** Streaming Text-to-Speech. */
-export async function textToSpeechStream(
-  text: string,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy"
-): Promise<AsyncIterable<string>> {
-  const stream = await getClient().chat.completions.create({
-    model: "gpt-audio",
-    modalities: ["text", "audio"],
-    audio: { voice, format: "pcm16" },
-    messages: [
-      { role: "system", content: "You are an assistant that performs text-to-speech." },
-      { role: "user", content: `Repeat the following text verbatim: ${text}` },
-    ],
-    stream: true,
-  });
-
-  return (async function* () {
-    for await (const chunk of stream) {
-      const delta = chunk.choices?.[0]?.delta as any;
-      if (!delta) continue;
-      if (delta?.audio?.data) {
-        yield delta.audio.data;
-      }
-    }
-  })();
+/** @deprecated Not supported on Groq — throws at runtime. */
+export async function textToSpeechStream(): Promise<never> {
+  throw GROQ_NO_TTS;
 }
 
-/** Speech-to-Text using gpt-4o-mini-transcribe. */
+// ─── SUPPORTED: Speech-to-Text via whisper-large-v3-turbo ────────────────────
+
+/** Transcribe audio using Groq's whisper-large-v3-turbo. */
 export async function speechToText(
   audioBuffer: Buffer,
   format: "wav" | "mp3" | "webm" = "wav"
@@ -231,28 +156,22 @@ export async function speechToText(
   const file = await toFile(audioBuffer, `audio.${format}`);
   const response = await getClient().audio.transcriptions.create({
     file,
-    model: "gpt-4o-mini-transcribe",
+    model: "whisper-large-v3-turbo",
   });
   return response.text;
 }
 
-/** Streaming Speech-to-Text. */
+/**
+ * Streaming Speech-to-Text.
+ * Groq doesn't support chunked transcription streaming; the full result is
+ * yielded as a single chunk to maintain API compatibility.
+ */
 export async function speechToTextStream(
   audioBuffer: Buffer,
   format: "wav" | "mp3" | "webm" = "wav"
 ): Promise<AsyncIterable<string>> {
-  const file = await toFile(audioBuffer, `audio.${format}`);
-  const stream = await getClient().audio.transcriptions.create({
-    file,
-    model: "gpt-4o-mini-transcribe",
-    stream: true,
-  });
-
+  const text = await speechToText(audioBuffer, format);
   return (async function* () {
-    for await (const event of stream) {
-      if (event.type === "transcript.text.delta") {
-        yield event.delta;
-      }
-    }
+    yield text;
   })();
 }

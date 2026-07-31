@@ -1,21 +1,19 @@
-import fs from "node:fs";
-import OpenAI, { toFile } from "openai";
-import { Buffer } from "node:buffer";
+import OpenAI from "openai";
 
-// Lazy client — only errors when an image function is actually called.
-let _client: OpenAI | undefined;
+// Groq does not support image generation.
+// These exports are kept so imports don't break, but calling them throws a clear error.
 
 function getClient(): OpenAI {
-  if (!_client) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "OPENAI_API_KEY must be set to use image generation. Add it in the Secrets panel.",
-      );
-    }
-    _client = new OpenAI({ apiKey });
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "GROQ_API_KEY is not set. Add it in the Secrets panel (free key at console.groq.com).",
+    );
   }
-  return _client;
+  return new OpenAI({
+    apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
 }
 
 export const openai = new Proxy({} as OpenAI, {
@@ -27,43 +25,20 @@ export const openai = new Proxy({} as OpenAI, {
 });
 
 export async function generateImageBuffer(
-  prompt: string,
-  size: "1024x1024" | "512x512" | "256x256" = "1024x1024"
+  _prompt: string,
+  _size?: "1024x1024" | "512x512" | "256x256"
 ): Promise<Buffer> {
-  const response = await getClient().images.generate({
-    model: "gpt-image-1",
-    prompt,
-    size,
-  });
-  const base64 = response.data?.[0]?.b64_json ?? "";
-  return Buffer.from(base64, "base64");
+  throw new Error(
+    "Image generation is not supported by Groq. Use a different provider (e.g. OpenAI DALL·E) if you need this feature.",
+  );
 }
 
 export async function editImages(
-  imageFiles: string[],
-  prompt: string,
-  outputPath?: string
+  _imageFiles: string[],
+  _prompt: string,
+  _outputPath?: string
 ): Promise<Buffer> {
-  const images = await Promise.all(
-    imageFiles.map((file) =>
-      toFile(fs.createReadStream(file), file, {
-        type: "image/png",
-      })
-    )
+  throw new Error(
+    "Image editing is not supported by Groq. Use a different provider (e.g. OpenAI DALL·E) if you need this feature.",
   );
-
-  const response = await getClient().images.edit({
-    model: "gpt-image-1",
-    image: images,
-    prompt,
-  });
-
-  const imageBase64 = response.data?.[0]?.b64_json ?? "";
-  const imageBytes = Buffer.from(imageBase64, "base64");
-
-  if (outputPath) {
-    fs.writeFileSync(outputPath, imageBytes);
-  }
-
-  return imageBytes;
 }
