@@ -59,7 +59,11 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   build: {
-    outDir: path.resolve(process.cwd(), 'dist/public'),
+    // On Vercel write to repo-root public/ (what vercel.json#outputDirectory points to).
+    // Everywhere else (Replit dev, local) write to dist/public inside this artifact.
+    outDir: process.env.VERCEL
+      ? path.resolve(process.cwd(), '..', '..', 'public')
+      : path.resolve(process.cwd(), 'dist/public'),
     emptyOutDir: true,
   },
   server: {
