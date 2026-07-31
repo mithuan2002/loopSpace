@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link, useLocation } from "wouter"
 import { useClerk, useUser } from "@clerk/react"
-import { LayoutDashboard, FolderKanban, Settings, LogOut, Plus, ChevronLeft, Menu } from "lucide-react"
+import { LayoutDashboard, FolderKanban, Settings, LogOut, Plus, ChevronLeft, Menu, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigation = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Projects", href: "/projects", icon: FolderKanban },
+    { name: "Guide", href: "/guide", icon: BookOpen },
     { name: "Settings", href: "/settings", icon: Settings },
   ]
 

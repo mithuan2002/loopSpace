@@ -18,7 +18,8 @@ import ProjectPages from "@/pages/projects/pages";
 import PageCreate from "@/pages/pages/new";
 import PageDetail from "@/pages/pages/detail";
 import PublicFeedbackForm from "@/pages/feedback/submit";
-import SettingsPage from "@/pages/settings";
+import SettingsPage from "@/pages/settings"
+import GuidePage from "@/pages/guide";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -183,6 +184,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/projects/:projectId/pages/new" component={PageCreate} />
             <Route path="/projects/:projectId/pages/:pageId" component={PageDetail} />
             <Route path="/settings" component={SettingsPage} />
+            <Route path="/guide" component={GuidePage} />
             
             {/* Public Routes */}
             <Route path="/feedback/submit/:pageToken" component={PublicFeedbackForm} />
