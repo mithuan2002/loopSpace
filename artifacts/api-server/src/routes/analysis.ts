@@ -110,8 +110,8 @@ Rules:
 - Be honest. If the feedback is mostly negative, say so clearly.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_completion_tokens: 2048,
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 2048,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

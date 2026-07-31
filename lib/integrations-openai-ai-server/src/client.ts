@@ -1,18 +1,26 @@
 import OpenAI from "openai";
 
-// Lazy client — created on first use so the server starts without the key.
-// Only the /analysis route needs this; all other routes work without it.
+// Lazy client — created on first use so the server starts without a key.
+// Prefers GROQ_API_KEY (free tier, OpenAI-compatible) over OPENAI_API_KEY.
 let _client: OpenAI | undefined;
 
 function getClient(): OpenAI {
   if (!_client) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    const groqKey = process.env.GROQ_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    if (groqKey) {
+      _client = new OpenAI({
+        apiKey: groqKey,
+        baseURL: "https://api.groq.com/openai/v1",
+      });
+    } else if (openaiKey) {
+      _client = new OpenAI({ apiKey: openaiKey });
+    } else {
       throw new Error(
-        "OPENAI_API_KEY must be set to use AI analysis. Add it in the Secrets panel.",
+        "No AI key found. Set GROQ_API_KEY (free at console.groq.com) or OPENAI_API_KEY in the Secrets panel.",
       );
     }
-    _client = new OpenAI({ apiKey });
   }
   return _client;
 }
