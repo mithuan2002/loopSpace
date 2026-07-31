@@ -1,0 +1,1 @@
+- [DB schema push required on fresh import](db-push-on-import.md) — imported Replit pnpm workspace projects need `pnpm --filter @workspace/db run push` before the API works; tables don't auto-create.
