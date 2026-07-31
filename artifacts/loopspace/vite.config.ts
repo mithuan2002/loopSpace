@@ -1,7 +1,12 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+
+// Reliable config-file directory — works even when Vite compiles the config
+// to a temp path before importing it (import.meta.dirname is Node 20.11+ only).
+const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 // PORT is only required when running the dev/preview server, not during `vite build`
 const rawPort = process.env.PORT;
@@ -42,7 +47,7 @@ export default defineConfig({
       ? [
           await import('@replit/vite-plugin-cartographer').then((m) =>
             m.cartographer({
-              root: path.resolve(import.meta.dirname, '..'),
+              root: path.resolve(configDir, '..'),
             }),
           ),
           await import('@replit/vite-plugin-dev-banner').then((m) =>
@@ -53,17 +58,17 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(process.cwd(), 'src'),
-      '@assets': path.resolve(process.cwd(), '..', '..', 'attached_assets'),
+      '@': path.resolve(configDir, 'src'),
+      '@assets': path.resolve(configDir, '..', '..', 'attached_assets'),
     },
     dedupe: ['react', 'react-dom'],
   },
   build: {
-    // On Vercel write to repo-root public/ (what vercel.json#outputDirectory points to).
-    // Everywhere else (Replit dev, local) write to dist/public inside this artifact.
+    // On Vercel write to repo-root public/ (vercel.json#outputDirectory: "public").
+    // Everywhere else (Replit, local) write to dist/public inside this artifact.
     outDir: process.env.VERCEL
-      ? path.resolve(process.cwd(), '..', '..', 'public')
-      : path.resolve(process.cwd(), 'dist/public'),
+      ? path.resolve(configDir, '..', '..', 'public')
+      : path.resolve(configDir, 'dist/public'),
     emptyOutDir: true,
   },
   server: {
