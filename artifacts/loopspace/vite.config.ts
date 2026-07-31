@@ -3,8 +3,6 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
-import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
-
 // PORT is only required when running the dev/preview server, not during `vite build`
 const rawPort = process.env.PORT;
 const isBuild = process.argv.includes('build');
@@ -34,7 +32,11 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss({ optimize: false }),
-    runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== 'production'
+      ? [
+          (await import('@replit/vite-plugin-runtime-error-modal')).default(),
+        ]
+      : []),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [

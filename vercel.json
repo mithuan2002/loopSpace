@@ -1,7 +1,7 @@
 {
   "framework": null,
   "installCommand": "corepack enable && pnpm install",
-  "buildCommand": "pnpm -w run typecheck:libs && pnpm --filter @workspace/api-server run build && BASE_PATH=/ pnpm --filter @workspace/loopspace run build && cp -r artifacts/loopspace/dist/public/. public",
+  "buildCommand": "pnpm -w run typecheck:libs && echo '[1/4] typecheck done' && pnpm --filter @workspace/api-server run build && echo '[2/4] api-server done' && BASE_PATH=/ pnpm --filter @workspace/loopspace run build && echo '[3/4] vite done' && mkdir -p public && cp -r artifacts/loopspace/dist/public/. public && echo '[4/4] copy done'",
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
