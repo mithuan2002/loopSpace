@@ -2,19 +2,35 @@ import fs from "node:fs";
 import OpenAI, { toFile } from "openai";
 import { Buffer } from "node:buffer";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY must be set.");
+// Lazy client — only errors when an image function is actually called.
+let _client: OpenAI | undefined;
+
+function getClient(): OpenAI {
+  if (!_client) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "OPENAI_API_KEY must be set to use image generation. Add it in the Secrets panel.",
+      );
+    }
+    _client = new OpenAI({ apiKey });
+  }
+  return _client;
 }
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+export const openai = new Proxy({} as OpenAI, {
+  get(_target, prop) {
+    const client = getClient();
+    const value = (client as any)[prop];
+    return typeof value === "function" ? value.bind(client) : value;
+  },
 });
 
 export async function generateImageBuffer(
   prompt: string,
   size: "1024x1024" | "512x512" | "256x256" = "1024x1024"
 ): Promise<Buffer> {
-  const response = await openai.images.generate({
+  const response = await getClient().images.generate({
     model: "gpt-image-1",
     prompt,
     size,
@@ -36,7 +52,7 @@ export async function editImages(
     )
   );
 
-  const response = await openai.images.edit({
+  const response = await getClient().images.edit({
     model: "gpt-image-1",
     image: images,
     prompt,
